@@ -73,7 +73,7 @@
     </tool>
 
     <pathSet base="miniconda3_gamma/bin">
-        <toolPath tool="GetDBAnnotations_Molecular" path="python"/>
+        <toolPath tool="GetDBAnnotations_Molecular" path="python3"/>
     </pathSet>
     <pathSet base="$base">
         <pathVar name="GetDBAnnotations_Molecular.script" path="getGNPS_library_annotations.py"/>

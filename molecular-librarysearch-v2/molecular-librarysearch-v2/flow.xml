@@ -78,6 +78,14 @@
         <output port="compound_filename_occurences" object="compound_filename_occurences"/>
     </action>
 
+    <object name="html_viewer"/>
+    <action name="write_html">
+        <input port="annotations" object="DB_result"/>
+        <input port="spectra" object="spectra"/>
+        <input port="libraries" object="library"/>
+        <output port="html_viewer" object="html_viewer"/>
+    </action>
+
     <action name="end">
         <input port="DB_result_groupbyannotation" object="DB_result_groupbyannotation"/>
         <input port="DB_result" object="DB_result"/>

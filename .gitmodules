@@ -16,3 +16,6 @@
 [submodule "GNPS_sharedcode"]
 	path = GNPS_sharedcode
 	url = https://github.com/mwang87/GNPS_sharedcode.git
+[submodule "html-viewer"]
+	path = html-viewer
+	url = https://github.com/arome-science/html-viewer.git

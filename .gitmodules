@@ -18,4 +18,4 @@
 	url = https://github.com/mwang87/GNPS_sharedcode.git
 [submodule "html-viewer"]
 	path = html-viewer
-	url = .git/html-viewer.git
+	url = /https://github.com/arome-science/html-viewer.git

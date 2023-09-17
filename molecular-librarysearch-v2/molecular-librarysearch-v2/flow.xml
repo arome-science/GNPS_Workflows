@@ -44,6 +44,13 @@
         <output port="result" object="result"/>
     </action>
 
+    <action name="add_retention_time_differences">
+        <input port="annotations" object="result"/>
+        <input port="spectra" object="spectra"/>
+        <input port="libraries" object="library"/>
+        <output port="annotations_with_rt" object="annotations_with_rt"/>
+    </action>
+
     <action name="get_dbannotations">
         <input port="result" collection="result"/>
         <output port="DB_result" object="DB_result"/>
@@ -80,7 +87,7 @@
 
     <object name="html_viewer"/>
     <action name="write_html">
-        <input port="annotations" object="DB_result"/>
+        <input port="annotations" object="annotations_with_rt"/>
         <input port="spectra" object="spectra"/>
         <input port="libraries" object="library"/>
         <output port="html_viewer" object="html_viewer"/>

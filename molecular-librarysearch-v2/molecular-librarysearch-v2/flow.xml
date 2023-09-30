@@ -51,6 +51,11 @@
         <output port="annotations_with_rt" object="annotations_with_rt"/>
     </action>
 
+    <action name="calculate_false_discovery_rate">
+        <input port="annotations_with_rt" object="annotations_with_rt"/>
+        <output port="annotations_with_fdr" object="annotations_with_fdr"/>
+    </action>
+
     <action name="get_dbannotations">
         <input port="result" collection="result"/>
         <output port="DB_result" object="DB_result"/>
@@ -87,7 +92,7 @@
 
     <object name="html_viewer"/>
     <action name="write_html">
-        <input port="annotations" object="annotations_with_rt"/>
+        <input port="annotations" object="annotations_with_fdr"/>
         <input port="spectra" object="spectra"/>
         <input port="libraries" object="library"/>
         <output port="html_viewer" object="html_viewer"/>

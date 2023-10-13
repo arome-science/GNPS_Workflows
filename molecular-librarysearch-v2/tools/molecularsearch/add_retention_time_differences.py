@@ -10,7 +10,10 @@ from typing import List
 def add_retention_time_differences(annotation_file: str, spectrum_file: str, library_files: List[str], output_file: str,
                                    tolerance: float = 0.2):
 
-    annotations = pd.read_csv(annotation_file, header=0, sep='\t')
+    try:
+        annotations = pd.read_csv(annotation_file, header=0, sep='\t')
+    except pd.errors.EmptyDataError:
+        return
     spectra = read_mgf(spectrum_file)
     # spectra_dict = {s.properties['name']: s for s in spectra}
 

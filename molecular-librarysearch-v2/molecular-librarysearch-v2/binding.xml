@@ -95,21 +95,27 @@
         <query name="task" valueRef="@task"/>
         <contentQuery name="content"/>
         <compression type="zip"/>
-        <upload port="result" type="file">
-            <query name="resource" value="result"/>
+        <upload port="annotations_in_gnps_format" type="file">
+            <query name="resource" value="annotations_in_gnps_format"/>
         </upload>
-        <upload port="DB_result" type="file">
-            <query name="resource" value="DB_result"/>
+        <upload port="html_viewer" type="file">
+            <query name="resource" value="html_viewer"/>
         </upload>
-        <upload port="compound_filename_occurences" type="file">
-            <query name="resource" value="compound_filename_occurences"/>
-        </upload>
-        <upload port="DB_result_groupbyannotation" type="file">
-            <query name="resource" value="DB_result_groupbyannotation"/>
-        </upload>
-        <upload port="filestatsresults_withID" type="file">
-            <query name="resource" value="filestatsresults_withID"/>
-        </upload>
+<!--        <upload port="result" type="file">-->
+<!--            <query name="resource" value="result"/>-->
+<!--        </upload>-->
+<!--        <upload port="DB_result" type="file">-->
+<!--            <query name="resource" value="DB_result"/>-->
+<!--        </upload>-->
+<!--        <upload port="compound_filename_occurences" type="file">-->
+<!--            <query name="resource" value="compound_filename_occurences"/>-->
+<!--        </upload>-->
+<!--        <upload port="DB_result_groupbyannotation" type="file">-->
+<!--            <query name="resource" value="DB_result_groupbyannotation"/>-->
+<!--        </upload>-->
+<!--        <upload port="filestatsresults_withID" type="file">-->
+<!--            <query name="resource" value="filestatsresults_withID"/>-->
+<!--        </upload>-->
 
     </bind>
 </binding>

@@ -277,4 +277,23 @@
         </execution>
     </tool>
 
+    <pathSet base="anaconda3">
+        <toolPath tool="format_output" path="bin/python3"/>
+    </pathSet>
+    <pathSet base="$base">
+        <pathVar name="format_output.script" path="format_output.py"/>
+    </pathSet>
+    <tool name="format_output">
+        <require name="annotations" type="file"/>
+        <require name="libraries" type="folder"/>
+        <produce name="annotations_in_gnps_format" type="file" naming="explicit" extension="tsv"/>
+
+        <execution env="binary" argConvention="adhoc">
+            <arg pathRef="format_output.script"/>
+            <arg option="-annotations" valueRef="annotations"/>
+            <arg option="-libraries" valueRef="libraries"/>
+            <arg option="-output" valueRef="annotations_in_gnps_format"/>
+        </execution>
+    </tool>
+
 </toolset>

@@ -18,7 +18,7 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
         unique_libraries = annotation_group['LibraryName'].unique()
         for library in unique_libraries:
             library_group = annotation_group[annotation_group['LibraryName'] == library] if isinstance(library, str) else annotation_group
-            sorted_group = library_group.sort_values(by='MQScore', ascending=False)
+            sorted_group = library_group.sort_values(by='Score', ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
                 row[f'{library}: {column}'] = sorted_group.iloc[0][column]

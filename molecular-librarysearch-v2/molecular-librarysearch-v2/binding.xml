@@ -101,6 +101,9 @@
         <upload port="html_viewer" type="file">
             <query name="resource" value="html_viewer"/>
         </upload>
+        <upload port="annotations_with_fdr" type="file">
+            <query name="resource" value="annotations_with_fdr"/>
+        </upload>
 <!--        <upload port="result" type="file">-->
 <!--            <query name="resource" value="result"/>-->
 <!--        </upload>-->

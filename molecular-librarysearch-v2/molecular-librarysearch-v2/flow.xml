@@ -109,10 +109,6 @@
     <action name="end">
         <input port="annotations_in_gnps_format" object="annotations_in_gnps_format"/>
         <input port="html_viewer" object="html_viewer"/>
-<!--        <input port="DB_result_groupbyannotation" object="DB_result_groupbyannotation"/>-->
-<!--        <input port="DB_result" object="DB_result"/>-->
-<!--        <input port="compound_filename_occurences" object="compound_filename_occurences"/>-->
-<!--        <input port="result" object="result"/>-->
-<!--        <input port="filestatsresults_withID" object="filestatsresults_withID"/>-->
+        <input port="annotations_with_fdr" object="annotations_with_fdr"/>
     </action>
 </flow>

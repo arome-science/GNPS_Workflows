@@ -9,8 +9,8 @@ from typing import List
 
 def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
     common_columns = ['#Scan#', 'Charge', 'SpecMZ', 'SpectrumFile', 'p-value']
-    annotation_columns = ['Peptide', 'ExactMass', 'SharedPeaks', 'SpectrumID', 'Score', 'MassDiff', 'Protein',
-                          'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Adduct', 'INCHI']
+    annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'MassDiff', 'Protein',
+                          'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey']
 
     filtered_rows = []
     for _, annotation_group in data.groupby(by=['#Scan#']):
@@ -33,7 +33,7 @@ def add_library_info(annotations: pd.DataFrame, library_filename: str):
     library = read_mgf(library_filename, id_field='SPECTRUMID')
     library_name = basename(library_filename)
     for index, annotation in annotations[annotations['LibraryName'] == library_name].iterrows():
-        spectrum_id = annotation['SpectrumID']
+        spectrum_id = annotation['Id']
         if not spectrum_id:
             continue
 
@@ -44,15 +44,15 @@ def add_library_info(annotations: pd.DataFrame, library_filename: str):
         properties = spectrum.properties
         annotations.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
         annotations.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
-        annotations.loc[index, 'Adduct'] = properties.get('PRECURSOR_TYPE')
-        annotations.loc[index, 'INCHI'] = properties.get('INCHIKEY')
-        annotations.loc[index, 'ExactMass'] = properties.get('EXACTMASS')
+        annotations.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
+        annotations.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
+        annotations.loc[index, 'Mass'] = properties.get('EXACTMASS')
 
 
 def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str):
     annotations = pd.read_csv(annotations_filename, header=0, sep='\t')
     annotations.rename(mapper={
-        'LibrarySpectrumID': 'SpectrumID',
+        'LibrarySpectrumID': 'Id',
         'CompoundName': 'Peptide',
         'ParentMassDiff': 'MassDiff',
         'LibSearchSharedPeaks': 'SharedPeaks',
@@ -63,6 +63,17 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         add_library_info(annotations, library_filename)
 
     annotations = filter_by_library(annotations)
+
+    annotations['MQScore'] = annotations[[c for c in annotations.columns if c.endswith(': Score')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['SpectrumID'] = annotations[[c for c in annotations.columns if c.endswith(': Id')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['Compound_Name'] = annotations[[c for c in annotations.columns if c.endswith(': Peptide')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['Adduct'] = annotations[[c for c in annotations.columns if c.endswith(': Prec.Type')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['INCHI'] = annotations[[c for c in annotations.columns if c.endswith(': InChIKey')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
 
     annotations.to_csv(output_filename, index=False, sep='\t')
 

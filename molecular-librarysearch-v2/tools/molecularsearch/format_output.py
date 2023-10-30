@@ -34,8 +34,8 @@ def add_library_info(annotations: pd.DataFrame, library_filename: str):
     library_name = basename(library_filename)
     for index, annotation in annotations[annotations['LibraryName'] == library_name].iterrows():
         spectrum_id = annotation['Id']
-        if not spectrum_id:
-            continue
+        if not spectrum_id or pd.isna(spectrum_id):
+            raise ValueError('Cannot find library spectrum ID')
 
         spectrum = library.get(spectrum_id)
         if not spectrum:
@@ -56,7 +56,8 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         'CompoundName': 'Peptide',
         'ParentMassDiff': 'MassDiff',
         'LibSearchSharedPeaks': 'SharedPeaks',
-        'MQScore': 'Score'
+        'MQScore': 'Score',
+        'ExactMass': 'Mass'
     }, axis=1, inplace=True)
 
     for library_filename in library_filenames:
@@ -74,6 +75,20 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         lambda x: ', '.join(x.astype(str)), axis=1)
     annotations['INCHI'] = annotations[[c for c in annotations.columns if c.endswith(': InChIKey')]].apply(
         lambda x: ', '.join(x.astype(str)), axis=1)
+
+
+    annotations['Smiles'] = None
+    annotations['Ion_Source'] = None
+    annotations['Instrument'] = None
+    annotations['Compound_Source'] = None
+    annotations['PI'] = None
+    annotations['Data_Collector'] = None
+    annotations['IonMode'] = None
+    annotations['MassDiff'] = None
+    annotations['MZErrorPPM'] = None
+    annotations['SharedPeaks'] = None
+    annotations['tags'] = None
+    annotations['Library_Class'] = None
 
     annotations.to_csv(output_filename, index=False, sep='\t')
 

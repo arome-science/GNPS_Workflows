@@ -44,6 +44,7 @@
         <output port="result" object="result"/>
     </action>
 
+    <object name="annotations_with_rt"/>
     <action name="add_retention_time_differences">
         <input port="annotations" object="result"/>
         <input port="spectra" object="spectra"/>

@@ -9,7 +9,7 @@ from typing import List
 
 def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
     common_columns = ['#Scan#', 'Charge', 'SpecMZ', 'SpectrumFile', 'p-value']
-    annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'MassDiff', 'Protein',
+    annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'MassDiff', 'RTdiff', 'RTmatch', 'Protein',
                           'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey']
 
     filtered_rows = []
@@ -75,7 +75,10 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         lambda x: ', '.join(x.astype(str)), axis=1)
     annotations['INCHI'] = annotations[[c for c in annotations.columns if c.endswith(': InChIKey')]].apply(
         lambda x: ', '.join(x.astype(str)), axis=1)
-
+    annotations['MZErrorPPM'] = annotations[[c for c in annotations.columns if c.endswith(': mzErrorPPM')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['RTdiff'] = annotations[[c for c in annotations.columns if c.endswith(': RTdiff')]].apply(
+        lambda x: ', '.join(x.astype(str)), axis=1)
 
     annotations['Smiles'] = None
     annotations['Ion_Source'] = None
@@ -85,7 +88,6 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
     annotations['Data_Collector'] = None
     annotations['IonMode'] = None
     annotations['MassDiff'] = None
-    annotations['MZErrorPPM'] = None
     annotations['SharedPeaks'] = None
     annotations['tags'] = None
     annotations['Library_Class'] = None

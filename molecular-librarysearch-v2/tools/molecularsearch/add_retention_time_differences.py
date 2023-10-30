@@ -8,7 +8,7 @@ from typing import List
 
 
 def add_retention_time_differences(annotation_file: str, spectrum_file: str, library_files: List[str], output_file: str,
-                                   tolerance: float = 0.2):
+                                   tolerance: float = 0.5):
 
     try:
         annotations = pd.read_csv(annotation_file, header=0, sep='\t')
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--spectra', help='MSP file with spectra', required=True)
     parser.add_argument('--libraries', help='MSP files with library spectra', nargs='+', required=True)
     parser.add_argument('--output', help='Output filename')
-    parser.add_argument('--tolerance', help='Retention time tolerance', default=0.2)
+    parser.add_argument('--tolerance', help='Retention time tolerance', default=0.5)
     args = parser.parse_args()
 
     if isdir(args.spectra):

@@ -21,7 +21,7 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
             sorted_group = library_group.sort_values(by='Score', ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
-                row[f'{library}: {column}'] = sorted_group.iloc[0][column]
+                row[f'{library}: {column}'] = sorted_group.iloc[0].get(column)
         filtered_rows.append(row)
 
     # filtered_data = pd.concat(filtered_rows, ignore_index=True)

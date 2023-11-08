@@ -107,6 +107,7 @@
     <action name="format_output">
         <input port="annotations" object="annotations_with_fdr"/>
         <input port="libraries" object="library"/>
+        <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>
         <output port="annotations_in_gnps_format" object="annotations_in_gnps_format"/>
     </action>
 

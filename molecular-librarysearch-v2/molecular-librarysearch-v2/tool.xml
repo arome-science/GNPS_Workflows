@@ -295,6 +295,7 @@
             <arg pathRef="format_output.script"/>
             <arg option="-annotations" valueRef="annotations"/>
             <arg option="-libraries" valueRef="libraries"/>
+            <arg option="-retention-time-tolerance" valueRef="retention_time_tolerance"/>
             <arg option="-output" valueRef="annotations_in_gnps_format"/>
         </execution>
     </tool>

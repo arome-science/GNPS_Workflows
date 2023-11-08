@@ -19,8 +19,8 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5)
         unique_libraries = annotation_group['LibraryName'].unique()
         for library in unique_libraries:
             library_group = annotation_group[annotation_group['LibraryName'] == library] if isinstance(library, str) else annotation_group
-            library_group['in_ret_time_tolerance'] = library_group['RTdiff'].apply(
-                lambda x: x < retention_time_tolerance) if 'RTdiff' in library_group.columns else None
+            library_group['in_ret_time_tolerance'] = library_group['RTdiff'].apply(lambda x: x < retention_time_tolerance) \
+                if 'RTdiff' in library_group.columns and library.startswith('LEVEL1') else None
             sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', 'Score'], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)

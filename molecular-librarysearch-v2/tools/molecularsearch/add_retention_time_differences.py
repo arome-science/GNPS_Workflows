@@ -4,6 +4,7 @@ import pandas as pd
 from os import listdir
 from os.path import basename, isdir, isfile, join, splitext
 from spectrum.spectrum import read_mgf, read_msp
+from tqdm import tqdm
 from typing import List
 
 
@@ -23,16 +24,15 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         libraries[library_name] = read_mgf(filename, id_field='SPECTRUMID')
 
     annotations_with_rt = annotations.copy()
-    for index, row in annotations.iterrows():
+    for index, row in tqdm(annotations.iterrows(), total=len(annotations)):
         query_id = str(row['#Scan#'])
         query_spectrum = spectra.get(query_id)
         if query_spectrum is None:
             continue
 
         query_ret_time = query_spectrum.properties.get('RTINSECONDS')
-        if query_ret_time is None:
-            continue
-        query_ret_time = float(query_ret_time)
+        if query_ret_time is not None:
+            query_ret_time = float(query_ret_time)
 
         library_name = row['LibraryName']
         library = libraries.get(library_name)
@@ -45,14 +45,20 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
             continue
 
         library_ret_time = library_spectrum.properties.get('RTINSECONDS')
-        if library_ret_time is None:
-            continue
-        library_ret_time = float(library_ret_time)
+        if library_ret_time is not None:
+            library_ret_time = float(library_ret_time)
 
-        ret_time_difference = abs(library_ret_time - query_ret_time) / 60.0
-        annotations_with_rt.loc[index, 'RTdiff'] = ret_time_difference
-        annotations_with_rt.loc[index, 'RTmatch'] = ret_time_difference < tolerance
+        if query_ret_time is not None and library_ret_time is not None:
+            ret_time_difference = abs(library_ret_time - query_ret_time) / 60.0
+            annotations_with_rt.loc[index, 'RTdiff'] = ret_time_difference
+            annotations_with_rt.loc[index, 'RTmatch'] = ret_time_difference < tolerance
 
+        properties = library_spectrum.properties
+        annotations_with_rt.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
+        annotations_with_rt.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
+        annotations_with_rt.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
+        annotations_with_rt.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
+        annotations_with_rt.loc[index, 'Mass'] = properties.get('EXACTMASS')
 
     annotations_with_rt.to_csv(output_file, index=False, sep='\t')
 

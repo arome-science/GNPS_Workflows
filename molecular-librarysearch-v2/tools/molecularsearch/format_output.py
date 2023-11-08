@@ -4,6 +4,7 @@ import pandas as pd
 from os.path import basename
 from spectrum.spectrum import read_mgf
 from spectrum.utils import expand_directories
+from tqdm import tqdm
 from typing import List
 
 
@@ -13,7 +14,7 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
                           'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey']
 
     filtered_rows = []
-    for _, annotation_group in data.groupby(by=['#Scan#']):
+    for index, annotation_group in tqdm(data.groupby(by=['#Scan#']), total=len(data['#Scan#'].unique())):
         row = annotation_group.iloc[0][common_columns]
         unique_libraries = annotation_group['LibraryName'].unique()
         for library in unique_libraries:
@@ -29,24 +30,24 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
     return filtered_data
 
 
-def add_library_info(annotations: pd.DataFrame, library_filename: str):
-    library = read_mgf(library_filename, id_field='SPECTRUMID')
-    library_name = basename(library_filename)
-    for index, annotation in annotations[annotations['LibraryName'] == library_name].iterrows():
-        spectrum_id = annotation['Id']
-        if not spectrum_id or pd.isna(spectrum_id):
-            raise ValueError('Cannot find library spectrum ID')
-
-        spectrum = library.get(spectrum_id)
-        if not spectrum:
-            continue
-
-        properties = spectrum.properties
-        annotations.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
-        annotations.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
-        annotations.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
-        annotations.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
-        annotations.loc[index, 'Mass'] = properties.get('EXACTMASS')
+# def add_library_info(annotations: pd.DataFrame, library_filename: str):
+#     library = read_mgf(library_filename, id_field='SPECTRUMID')
+#     library_name = basename(library_filename)
+#     for index, annotation in annotations[annotations['LibraryName'] == library_name].iterrows():
+#         spectrum_id = annotation['Id']
+#         if not spectrum_id or pd.isna(spectrum_id):
+#             raise ValueError('Cannot find library spectrum ID')
+#
+#         spectrum = library.get(spectrum_id)
+#         if not spectrum:
+#             continue
+#
+#         properties = spectrum.properties
+#         annotations.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
+#         annotations.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
+#         annotations.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
+#         annotations.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
+#         annotations.loc[index, 'Mass'] = properties.get('EXACTMASS')
 
 
 def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str):
@@ -60,8 +61,8 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         'ExactMass': 'Mass'
     }, axis=1, inplace=True)
 
-    for library_filename in library_filenames:
-        add_library_info(annotations, library_filename)
+    # for library_filename in library_filenames:
+    #     add_library_info(annotations, library_filename)
 
     annotations = filter_by_library(annotations)
 

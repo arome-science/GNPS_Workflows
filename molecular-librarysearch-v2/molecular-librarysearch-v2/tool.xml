@@ -236,6 +236,8 @@
             <arg option="-libraries" valueRef="libraries"/>
             <arg option="-source" value="gnps"/>
             <arg option="-output" valueRef="html_viewer"/>
+            <arg option="-mz-tolerance-ppm" valueRef="mz_tolerance_ppm"/>
+            <arg option="-retention-time-tolerance" valueRef="retention_time_tolerance"/>
         </execution>
     </tool>
 
@@ -257,6 +259,7 @@
             <arg option="-spectra" valueRef="spectra"/>
             <arg option="-libraries" valueRef="libraries"/>
             <arg option="-output" valueRef="annotations_with_rt"/>
+            <arg option="-tolerance" valueRef="retention_time_tolerance"/>
         </execution>
     </tool>
 

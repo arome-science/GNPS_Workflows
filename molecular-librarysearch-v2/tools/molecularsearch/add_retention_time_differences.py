@@ -75,7 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--spectra', help='MSP file with spectra', required=True)
     parser.add_argument('--libraries', help='MSP files with library spectra', nargs='+', required=True)
     parser.add_argument('--output', help='Output filename')
-    parser.add_argument('--tolerance', help='Retention time tolerance', default=0.5)
+    parser.add_argument('--tolerance', help='Retention time tolerance', type=float, default=0.5)
     args = parser.parse_args()
 
     if isdir(args.spectra):

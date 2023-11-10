@@ -8,7 +8,7 @@ from tqdm import tqdm
 from typing import List
 
 
-def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
+def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5) -> pd.DataFrame:
     common_columns = ['#Scan#', 'Charge', 'SpecMZ', 'SpectrumFile', 'p-value']
     annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'MassDiff', 'RTdiff', 'RTmatch', 'Protein',
                           'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey']
@@ -19,7 +19,9 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
         unique_libraries = annotation_group['LibraryName'].unique()
         for library in unique_libraries:
             library_group = annotation_group[annotation_group['LibraryName'] == library] if isinstance(library, str) else annotation_group
-            sorted_group = library_group.sort_values(by='Score', ascending=False)
+            library_group['in_ret_time_tolerance'] = library_group['RTdiff'].apply(lambda x: x < retention_time_tolerance) \
+                if 'RTdiff' in library_group.columns and library.startswith('LEVEL1') else None
+            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', 'Score'], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
                 row[f'{library}: {column}'] = sorted_group.iloc[0].get(column)
@@ -50,7 +52,8 @@ def filter_by_library(data: pd.DataFrame) -> pd.DataFrame:
 #         annotations.loc[index, 'Mass'] = properties.get('EXACTMASS')
 
 
-def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str):
+def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str,
+                  retention_time_tolerance: float = 0.5):
     annotations = pd.read_csv(annotations_filename, header=0, sep='\t')
     annotations.rename(mapper={
         'LibrarySpectrumID': 'Id',
@@ -64,7 +67,7 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
     # for library_filename in library_filenames:
     #     add_library_info(annotations, library_filename)
 
-    annotations = filter_by_library(annotations)
+    annotations = filter_by_library(annotations, retention_time_tolerance)
 
     annotations['MQScore'] = annotations[[c for c in annotations.columns if c.endswith(': Score')]].apply(
         lambda x: ', '.join(x.astype(str)), axis=1)
@@ -101,6 +104,8 @@ if __name__ == '__main__':
     parser.add_argument('--annotations', help='TSV file with MSPepSearch annotations', required=True)
     parser.add_argument('--libraries', help='MSP files with library spectra', nargs='+', required=True)
     parser.add_argument('--output', help='Output filename', required=True)
+    parser.add_argument('--retention-time-tolerance', help='Retention time tolerance (min)', type=float,
+                        default=0.5)
     args = parser.parse_args()
     args.libraries = expand_directories(args.libraries)
-    format_output(args.annotations, args.libraries, args.output)
+    format_output(args.annotations, args.libraries, args.output, args.retention_time_tolerance)

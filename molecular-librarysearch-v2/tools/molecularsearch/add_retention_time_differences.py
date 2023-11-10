@@ -58,7 +58,7 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         annotations_with_rt.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
         annotations_with_rt.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
         annotations_with_rt.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
-        annotations_with_rt.loc[index, 'Mass'] = properties.get('EXACTMASS')
+        annotations_with_rt.loc[index, 'Mass'] = properties.get('EXACTMASS', properties.get('EXACT_MASS'))
 
     annotations_with_rt.to_csv(output_file, index=False, sep='\t')
 

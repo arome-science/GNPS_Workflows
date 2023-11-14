@@ -13,17 +13,17 @@ def calculate_false_discovery_rate(input_filename: str, output_filename: str):
     for scan in scans:
         selection = annotations['#Scan#'] == scan
         library_names = annotations.loc[selection, 'LibraryName']
-        num_target_libraries = 0
-        num_decoy_libraries = 0
-        for library in library_names:
+        false_discovery_rates = pd.Series(index=library_names.index)
+        for library in library_names.unique():
             if library.lower().startswith('decoy'):
-                num_decoy_libraries += 1
-            else:
-                num_target_libraries += 1
+                decoy_annotations = library_names[library_names == library]
+                target_and_decoy_selection = library_names.apply(lambda x: x.endswith(library[6:]))
+                target_and_decoy_annotations = library_names[target_and_decoy_selection]
+                if len(target_and_decoy_annotations) > 0:
+                    false_discovery_rate = len(decoy_annotations) / len(target_and_decoy_annotations)
+                    false_discovery_rates[target_and_decoy_selection] = false_discovery_rate
 
-        false_discovery_rate = num_decoy_libraries / (num_target_libraries + num_decoy_libraries)\
-            if num_target_libraries > 0 or num_decoy_libraries > 0 else None
-        annotations.loc[selection, 'FalseDiscoveryRate'] = false_discovery_rate
+        annotations.loc[selection, 'FalseDiscoveryRate'] = false_discovery_rates
 
     annotations.to_csv(output_filename, index=False, sep='\t')
 

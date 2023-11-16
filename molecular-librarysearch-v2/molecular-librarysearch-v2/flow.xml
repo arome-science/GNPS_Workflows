@@ -50,6 +50,7 @@
         <input port="spectra" object="spectra"/>
         <input port="libraries" object="library"/>
         <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>
+        <input port="retention_time_matches_only" object="@RETENTION_TIME_MATCHES_ONLY"/>
         <output port="annotations_with_rt" object="annotations_with_rt"/>
     </action>
 

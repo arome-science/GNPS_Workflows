@@ -9,7 +9,7 @@ from typing import List
 
 
 def add_retention_time_differences(annotation_file: str, spectrum_file: str, library_files: List[str], output_file: str,
-                                   tolerance: float = 0.5):
+                                   tolerance: float = 0.5, retention_time_matches_only: bool = False):
 
     try:
         annotations = pd.read_csv(annotation_file, header=0, sep='\t')
@@ -24,9 +24,11 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         libraries[library_name] = read_mgf(filename, id_field='SPECTRUMID')
 
     annotations_with_rt = annotations.copy()
+    drop_indices = []
     for index, row in tqdm(annotations.iterrows(), total=len(annotations)):
         query_id = str(row['#Scan#'])
-        query_spectrum = spectra.get(query_id)
+        # query_spectrum = spectra.get(query_id)
+        query_spectrum = spectra[query_id] if query_id in spectra else None
         if query_spectrum is None:
             continue
 
@@ -40,7 +42,8 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
             continue
 
         library_id = str(row['LibrarySpectrumID'])
-        library_spectrum = library.get(library_id)
+        # library_spectrum = library.get(library_id)
+        library_spectrum = library[library_id] if library_id in library else None
         if library_spectrum is None:
             continue
 
@@ -52,6 +55,10 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
             ret_time_difference = abs(library_ret_time - query_ret_time) / 60.0
             annotations_with_rt.loc[index, 'RTdiff'] = ret_time_difference
             annotations_with_rt.loc[index, 'RTmatch'] = ret_time_difference < tolerance
+            if retention_time_matches_only and ret_time_difference > tolerance:
+                drop_indices.append(index)
+        elif retention_time_matches_only:
+            drop_indices.append(index)
 
         properties = library_spectrum.properties
         annotations_with_rt.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
@@ -59,6 +66,9 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         annotations_with_rt.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
         annotations_with_rt.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
         annotations_with_rt.loc[index, 'Mass'] = properties.get('EXACTMASS', properties.get('EXACT_MASS'))
+
+    if len(drop_indices) > 0:
+        annotations_with_rt.drop(labels=drop_indices, axis='index', inplace=True)
 
     annotations_with_rt.to_csv(output_file, index=False, sep='\t')
 
@@ -76,6 +86,10 @@ if __name__ == '__main__':
     parser.add_argument('--libraries', help='MSP files with library spectra', nargs='+', required=True)
     parser.add_argument('--output', help='Output filename')
     parser.add_argument('--tolerance', help='Retention time tolerance', type=float, default=0.5)
+    parser.add_argument('--retention-time-matches-only',
+                        help='If true, only matches with the retention time error below the threshold are kept',
+                        type=lambda x: x.lower() in ('1', 'yes', 'true'),
+                        default=False)
     args = parser.parse_args()
 
     if isdir(args.spectra):
@@ -91,4 +105,5 @@ if __name__ == '__main__':
             libraries.append(lib)
     args.libraries = libraries
 
-    add_retention_time_differences(args.annotations, args.spectra, args.libraries, args.output, args.tolerance)
+    add_retention_time_differences(args.annotations, args.spectra, args.libraries, args.output, args.tolerance,
+                                   args.retention_time_matches_only)

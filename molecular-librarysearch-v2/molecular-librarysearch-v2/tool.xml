@@ -260,6 +260,7 @@
             <arg option="-libraries" valueRef="libraries"/>
             <arg option="-output" valueRef="annotations_with_rt"/>
             <arg option="-tolerance" valueRef="retention_time_tolerance"/>
+            <arg option="-retention-time-matches-only" valueRef="retention_time_matches_only"/>
         </execution>
     </tool>
 

@@ -52,6 +52,10 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5)
 #         annotations.loc[index, 'Mass'] = properties.get('EXACTMASS')
 
 
+def merge_columns(data: pd.DataFrame) -> pd.Series:
+    return data.apply(lambda x: ', '.join(x.astype(str)) if len(x.dropna()) > 0 else ' ', axis=1)
+
+
 def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str,
                   retention_time_tolerance: float = 0.5):
     annotations = pd.read_csv(annotations_filename, header=0, sep='\t')
@@ -69,20 +73,13 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
 
     annotations = filter_by_library(annotations, retention_time_tolerance)
 
-    annotations['MQScore'] = annotations[[c for c in annotations.columns if c.endswith(': Score')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['SpectrumID'] = annotations[[c for c in annotations.columns if c.endswith(': Id')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['Compound_Name'] = annotations[[c for c in annotations.columns if c.endswith(': Peptide')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['Adduct'] = annotations[[c for c in annotations.columns if c.endswith(': Prec.Type')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['INCHI'] = annotations[[c for c in annotations.columns if c.endswith(': InChIKey')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['MZErrorPPM'] = annotations[[c for c in annotations.columns if c.endswith(': mzErrorPPM')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
-    annotations['RTdiff'] = annotations[[c for c in annotations.columns if c.endswith(': RTdiff')]].apply(
-        lambda x: ', '.join(x.astype(str)), axis=1)
+    annotations['MQScore'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Score')]])
+    annotations['SpectrumID'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Id')]])
+    annotations['Compound_Name'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Peptide')]])
+    annotations['Adduct'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Prec.Type')]])
+    annotations['INCHI'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': InChIKey')]])
+    annotations['MZErrorPPM'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': mzErrorPPM')]])
+    annotations['RTdiff'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': RTdiff')]])
 
     annotations['Smiles'] = None
     annotations['Ion_Source'] = None

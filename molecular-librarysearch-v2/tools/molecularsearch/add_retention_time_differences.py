@@ -10,6 +10,16 @@ from typing import List
 
 def add_retention_time_differences(annotation_file: str, spectrum_file: str, library_files: List[str], output_file: str,
                                    tolerance: float = 0.5, retention_time_matches_only: bool = False):
+    property_mapping = {
+        'IONMODE': 'IonMode',
+        'ION_MODE': 'IonMode',
+        'SOURCE_INSTRUMENT': 'Instrument',
+        'INSTRUMENT': 'Instrument',
+        'PRECURSOR_TYPE': 'Prec.Type',
+        'INCHIKEY': 'InChIKey',
+        'EXACTMASS': 'Mass',
+        'EXACT_MASS': 'Mass'
+    }
 
     try:
         annotations = pd.read_csv(annotation_file, header=0, sep='\t')
@@ -32,12 +42,15 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         if query_spectrum is None:
             continue
 
-        query_ret_time = query_spectrum.properties.get('RTINSECONDS')
-        if query_ret_time is not None:
-            query_ret_time = float(query_ret_time)
+        # query_ret_time = query_spectrum.properties.get('RTINSECONDS')
+        # if query_ret_time is not None:
+        #     query_ret_time = float(query_ret_time)
+        query_ret_time = float(
+            query_spectrum.properties['RTINSECONDS']) if 'RTINSECONDS' in query_spectrum.properties else None
 
         library_name = row['LibraryName']
-        library = libraries.get(library_name)
+        # library = libraries.get(library_name)
+        library = libraries[library_name] if library_name in libraries else None
         if library is None:
             continue
 
@@ -47,9 +60,11 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         if library_spectrum is None:
             continue
 
-        library_ret_time = library_spectrum.properties.get('RTINSECONDS')
-        if library_ret_time is not None:
-            library_ret_time = float(library_ret_time)
+        # library_ret_time = library_spectrum.properties.get('RTINSECONDS')
+        # if library_ret_time is not None:
+        #     library_ret_time = float(library_ret_time)
+        library_ret_time = float(
+            library_spectrum.properties['RTINSECONDS']) if 'RTINSECONDS' in library_spectrum.properties else None
 
         if query_ret_time is not None and library_ret_time is not None:
             ret_time_difference = abs(library_ret_time - query_ret_time) / 60.0
@@ -60,12 +75,26 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         elif retention_time_matches_only:
             drop_indices.append(index)
 
-        properties = library_spectrum.properties
-        annotations_with_rt.loc[index, 'IonMode'] = properties.get('IONMODE', properties.get('ION_MODE'))
-        annotations_with_rt.loc[index, 'Instrument'] = properties.get('SOURCE_INSTRUMENT', properties.get('INSTRUMENT'))
-        annotations_with_rt.loc[index, 'Prec.Type'] = properties.get('PRECURSOR_TYPE')
-        annotations_with_rt.loc[index, 'InChIKey'] = properties.get('INCHIKEY')
-        annotations_with_rt.loc[index, 'Mass'] = properties.get('EXACTMASS', properties.get('EXACT_MASS'))
+        for key in library_spectrum.properties:
+            if key in property_mapping:
+                annotations_with_rt.loc[index, property_mapping[key]] = library_spectrum.properties[key]
+        # properties = library_spectrum.properties
+        # if 'IONMODE' in properties:
+        #     annotations_with_rt.loc[index, 'IonMode'] = properties['IONMODE']
+        # else:
+        #     annotations_with_rt.loc[index, 'IonMode'] = properties['ION_MODE'] if 'ION_MODE' in properties else None
+        # if 'SOURCE_INSTRUMENT' in properties:
+        #     annotations_with_rt.loc[index, 'Instrument'] = properties['SOURCE_INSTRUMENT']
+        # else:
+        #     annotations_with_rt.loc[index, 'Instrument'] = properties[
+        #         'INSTRUMENT'] if 'INSTRUMENT' in properties else None
+        # annotations_with_rt.loc[index, 'Prec.Type'] = properties[
+        #     'PRECURSOR_TYPE'] if 'PRECURSOR_TYPE' in properties else None
+        # annotations_with_rt.loc[index, 'InChIKey'] = properties['INCHIKEY'] if 'INCHIKEY' in properties else None
+        # if 'EXACTMASS' in properties:
+        #     annotations_with_rt.loc[index, 'Mass'] = properties['EXACTMASS']
+        # else:
+        #     annotations_with_rt.loc[index, 'Mass'] = properties['EXACT_MASS'] if 'EXACT_MASS' in properties else None
 
     if len(drop_indices) > 0:
         annotations_with_rt.drop(labels=drop_indices, axis='index', inplace=True)

@@ -13,7 +13,7 @@ def calculate_false_discovery_rate(input_filename: str, output_filename: str):
     for scan in scans:
         selection = annotations['#Scan#'] == scan
         library_names = annotations.loc[selection, 'LibraryName']
-        false_discovery_rates = pd.Series(index=library_names.index)
+        false_discovery_rates = pd.Series(index=library_names.index, dtype=float)
         for library in library_names.unique():
             if library.lower().startswith('decoy'):
                 decoy_annotations = library_names[library_names == library]

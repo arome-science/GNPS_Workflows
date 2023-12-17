@@ -60,9 +60,9 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         if library_spectrum is None:
             continue
 
-        if query_spectrum.get_polarity_sign() != library_spectrum.get_polarity_sign():
-            drop_indices.append(index)
-            continue
+        # if query_spectrum.get_polarity_sign() != library_spectrum.get_polarity_sign():
+        #     drop_indices.append(index)
+        #     continue
 
         # library_ret_time = library_spectrum.properties.get('RTINSECONDS')
         # if library_ret_time is not None:

@@ -1,8 +1,8 @@
 <toolset>
 
     <pathSet base="miniconda3_gamma/envs/mshub-gc">
-        <toolPath tool="preprocess_gcms_data" path="bin/python"/>
-        <pathVar name="python.exe" path="bin/python"/>
+        <toolPath tool="preprocess_gcms_data" path="bin/python3"/>
+        <pathVar name="python.exe" path="bin/python3"/>
     </pathSet>
 
     <pathSet base="$base">
@@ -49,7 +49,7 @@
 
 
     <pathSet base="miniconda3_gamma/envs/mshub-gc">
-        <toolPath tool="create_quantification" path="bin/python"/>
+        <toolPath tool="create_quantification" path="bin/python3"/>
     </pathSet>
 
     <pathSet base="$base">

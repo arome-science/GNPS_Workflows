@@ -8,7 +8,7 @@ from tqdm import tqdm
 from typing import List
 
 
-def add_retention_time_differences(annotation_file: str, spectrum_file: str, library_files: List[str], output_file: str,
+def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str], output_file: str,
                                    tolerance: float = 0.5, retention_time_matches_only: bool = False):
     property_mapping = {
         'IONMODE': 'IonMode',
@@ -25,7 +25,10 @@ def add_retention_time_differences(annotation_file: str, spectrum_file: str, lib
         annotations = pd.read_csv(annotation_file, header=0, sep='\t')
     except pd.errors.EmptyDataError:
         return
-    spectra = read_mgf(spectrum_file)
+
+    spectra = {}
+    for spectrum_file in spectrum_files:
+        spectra.update(read_mgf(spectrum_file))
     # spectra_dict = {s.properties['name']: s for s in spectra}
 
     libraries = {}
@@ -111,7 +114,7 @@ if __name__ == '__main__':
     if isdir(args.spectra):
         files = expand_directory(args.spectra)
         assert len(files) > 0, f'Cannot find spectrum files in folder {args.spectra}'
-        args.spectra = files[0]
+        args.spectra = files
 
     libraries = []
     for lib in args.libraries:

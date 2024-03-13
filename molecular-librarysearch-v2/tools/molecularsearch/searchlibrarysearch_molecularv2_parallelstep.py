@@ -121,8 +121,8 @@ def main():
     except:
         print("folder error")
 
-
-    list_of_spectrumfiles = chunks(spectra_files, 5)
+    cpu_count = max(1, os.cpu_count() // 2)
+    list_of_spectrumfiles = chunks(spectra_files, len(spectra_files) // cpu_count)
     parameter_list = []
     for spectrum_files_chunk in list_of_spectrumfiles:
         param_dict = {}
@@ -138,7 +138,7 @@ def main():
     #for param_dict in parameter_list:
     #    search_wrapper(param_dict)
     print("Parallel to execute", len(parameter_list))
-    ming_parallel_library.run_parallel_job(search_wrapper, parameter_list, 5)
+    ming_parallel_library.run_parallel_job(search_wrapper, parameter_list, cpu_count)
 
 
     """Merging Files and adding full path"""

@@ -29,8 +29,8 @@
         <output port="parallel_params" collection="parallel_params"/>
     </action>
 
-    <!-- Parallel Library Search -->
-    <action name="searchlibrarysearch_molecularv2_parallelstep" multiplicity="multiple" type="parallel">
+    <!-- Parallel Library Search |  multiplicity="multiple" type="parallel" |  transformation="unfolding" -->
+    <action name="searchlibrarysearch_molecularv2_parallelstep" multiplicity="multiple">
         <input port="spec" collection="spectra"/>
         <input port="parameter" collection="parallel_params" transformation="unfolding"/>
         <input port="workflowParameters" object="workflowParameters"/>

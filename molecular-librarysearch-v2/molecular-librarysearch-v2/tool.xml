@@ -176,7 +176,7 @@
 
         <execution env="binary" argConvention="adhoc">
                 <arg valueRef="parallel_params"/>
-                <arg value="10"/>
+                <arg value="1"/>
         </execution>
     </tool>
 

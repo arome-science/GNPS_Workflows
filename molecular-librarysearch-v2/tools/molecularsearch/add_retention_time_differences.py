@@ -1,4 +1,6 @@
 import argparse
+
+import numpy as np
 import pandas as pd
 
 from os import listdir
@@ -8,8 +10,40 @@ from tqdm import tqdm
 from typing import List
 
 
-def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str], output_file: str,
-                                   tolerance: float = 0.5, retention_time_matches_only: bool = False):
+def calculate_retention_indices(annotations: pd.DataFrame, alkanes_filename: str) -> pd.DataFrame:
+    annotations['Ret Index'] = None
+    if alkanes_filename is None:
+        return annotations
+
+    alkanes = pd.read_csv(alkanes_filename, header=0)
+    if len(alkanes) < 2 or 'Num carbons' not in alkanes.columns or 'Retention time' not in alkanes.columns:
+        return annotations
+
+    alkanes.sort_values(by='Retention time', inplace=True)
+    alkane_carbons = alkanes['Num carbons'].values
+    alkane_times = alkanes['Retention time'].values
+
+    alkane = 0
+    for i in np.argsort(annotations['p-value']):  # column 'p-value' actually contains query ret times
+        row = annotations.loc[i]
+        time = row['p-value'] / 60
+        if pd.isna(time) or not isinstance(time, float) or time < alkane_times[alkane]:
+            continue
+
+        while alkane < len(alkanes) - 1 and time > alkane_times[alkane + 1]:
+            alkane += 1
+
+        if alkane >= len(alkanes) - 1:
+            break
+
+        annotations.loc[i, 'Ret Index'] = 100 * (alkane_carbons[alkane] + (time - alkane_times[alkane]) / (alkane_times[alkane + 1] - alkane_times[alkane]))
+
+    return annotations
+
+
+def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str],
+                                   output_file: str, tolerance: float = 0.5, retention_time_matches_only: bool = False,
+                                   alkanes_file: str = None):
     property_mapping = {
         'IONMODE': 'IonMode',
         'ION_MODE': 'IonMode',
@@ -25,6 +59,8 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
         annotations = pd.read_csv(annotation_file, header=0, sep='\t')
     except pd.errors.EmptyDataError:
         return
+
+    annotations = calculate_retention_indices(annotations, alkanes_file)
 
     spectra = {}
     for spectrum_file in spectrum_files:
@@ -109,6 +145,7 @@ if __name__ == '__main__':
                         help='If true, only matches with the retention time error below the threshold are kept',
                         type=lambda x: x.lower() in ('1', 'yes', 'true'),
                         default=False)
+    parser.add_argument('--alkanes', help='CSV file with alkanes')
     args = parser.parse_args()
 
     if isdir(args.spectra):
@@ -125,4 +162,4 @@ if __name__ == '__main__':
     args.libraries = libraries
 
     add_retention_time_differences(args.annotations, args.spectra, args.libraries, args.output, args.tolerance,
-                                   args.retention_time_matches_only)
+                                   args.retention_time_matches_only, args.alkanes)

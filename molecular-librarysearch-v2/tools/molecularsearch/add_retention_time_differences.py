@@ -1,17 +1,19 @@
 import argparse
+import re
+import sys
 
 import numpy as np
 import pandas as pd
 
 from os import listdir
 from os.path import basename, isdir, isfile, join, splitext
-from spectrum.spectrum import read_mgf, read_msp
+from spectrum.spectrum import read_mgf, read_msp, Spectrum
 from tqdm import tqdm
-from typing import List
+from typing import Dict, List
 
 
 def calculate_retention_indices(annotations: pd.DataFrame, alkanes_filename: str) -> pd.DataFrame:
-    annotations['Ret Index'] = None
+    annotations['RetIndex'] = None
     if alkanes_filename is None:
         return annotations
 
@@ -36,14 +38,58 @@ def calculate_retention_indices(annotations: pd.DataFrame, alkanes_filename: str
         if alkane >= len(alkanes) - 1:
             break
 
-        annotations.loc[i, 'Ret Index'] = 100 * (alkane_carbons[alkane] + (time - alkane_times[alkane]) / (alkane_times[alkane + 1] - alkane_times[alkane]))
+        annotations.loc[i, 'RetIndex'] = 100 * (alkane_carbons[alkane] + (time - alkane_times[alkane]) / (alkane_times[alkane + 1] - alkane_times[alkane]))
+
+    return annotations
+
+
+def parse_retention_index(text: str) -> Dict[str, float]:
+    retention_index_map = {}
+    for key, value in re.findall(r'(\w+)=(\d+)', text):
+        retention_index_map[key] = int(value)
+    return retention_index_map
+
+
+def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Dict[str, Spectrum]],
+                              retention_index_type: str, matches_only: bool = False,
+                              tolerance=50) -> pd.DataFrame:
+
+    for (scan, retention_index, library_name), rows in annotations.groupby(by=['#Scan#', 'RetIndex', 'LibraryName']):
+        library = libraries[library_name] if library_name in libraries else None
+        if library is None:
+            continue
+        for index, row in rows.iterrows():
+            spectrumId = row['LibrarySpectrumID']
+            spectrum = library[spectrumId] if spectrumId in library else None
+            if spectrum is None:
+                print(f'Cannot find spectrum {spectrumId} in the library {library_name}', file=sys.stderr)
+                continue
+
+            library_retention_index = spectrum.properties['Retention_index'] if 'Retention_index' in spectrum.properties else None
+            if library_retention_index is None:
+                continue
+
+            library_retention_index = parse_retention_index(library_retention_index)
+            if retention_index_type in library_retention_index:
+                annotations.loc[index, 'MatchedRetIndex'] = str(library_retention_index)
+                annotations.loc[index, 'RetIndexDiff'] = abs(library_retention_index[retention_index_type] - retention_index)
+
+    drop_indices = set()
+    for _, rows in annotations.groupby(by=['#Scan#', 'LibraryName']):
+        if 'RetIndexDiff' in rows.columns:
+            selection = rows['RetIndexDiff'] < tolerance
+            if matches_only or np.any(selection):  # or np.any(selection)
+                drop_indices.update(rows.index[~selection].values)
+
+    annotations.drop(drop_indices, axis=0, inplace=True)
 
     return annotations
 
 
 def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str],
                                    output_file: str, tolerance: float = 0.5, retention_time_matches_only: bool = False,
-                                   alkanes_file: str = None):
+                                   alkanes_file: str = None, retention_index_type: str = 'StdNP',
+                                   retention_index_matches_only: bool = False, retention_index_tolerance: float = 50):
     property_mapping = {
         'IONMODE': 'IonMode',
         'ION_MODE': 'IonMode',
@@ -71,6 +117,10 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
     for filename in library_files:
         library_name = basename(filename)
         libraries[library_name] = read_mgf(filename, id_field='SPECTRUMID')
+
+    annotations = filter_by_retention_index(annotations, libraries, retention_index_type,
+                                            matches_only=retention_index_matches_only,
+                                            tolerance=retention_index_tolerance)
 
     annotations_with_rt = annotations.copy()
     drop_indices = []
@@ -146,6 +196,11 @@ if __name__ == '__main__':
                         type=lambda x: x.lower() in ('1', 'yes', 'true'),
                         default=False)
     parser.add_argument('--alkanes', help='CSV file with alkanes')
+    parser.add_argument('--retention-index-matches-only',
+                        help='If true, only matches with the retention index error below the threshold are kept',
+                        type=lambda x: x.lower() in ('1', 'yes', 'true'), default=False)
+    parser.add_argument('--retention-index-tolerance', help='Retention index tolerance', type=float,
+                        default=50)
     args = parser.parse_args()
 
     if isdir(args.spectra):
@@ -162,4 +217,6 @@ if __name__ == '__main__':
     args.libraries = libraries
 
     add_retention_time_differences(args.annotations, args.spectra, args.libraries, args.output, args.tolerance,
-                                   args.retention_time_matches_only, args.alkanes)
+                                   args.retention_time_matches_only, args.alkanes,
+                                   retention_index_matches_only=args.retention_index_matches_only,
+                                   retention_index_tolerance=args.retention_index_tolerance)

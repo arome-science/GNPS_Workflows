@@ -250,6 +250,7 @@
     <tool name="add_retention_time_differences">
         <require name="annotations" type="file"/>
         <require name="spectra" type="file"/>
+        <require name="alkanes" type="file" optional="true"/>
         <require name="libraries" type="folder"/>
         <produce name="annotations_with_rt" type="file" naming="explicit" extension="tsv"/>
 
@@ -258,9 +259,12 @@
             <arg option="-annotations" valueRef="annotations"/>
             <arg option="-spectra" valueRef="spectra"/>
             <arg option="-libraries" valueRef="libraries"/>
+            <arg option="-alkanes" valueRef="alkanes"/>
             <arg option="-output" valueRef="annotations_with_rt"/>
             <arg option="-tolerance" valueRef="retention_time_tolerance"/>
             <arg option="-retention-time-matches-only" valueRef="retention_time_matches_only"/>
+            <arg option="-retention-index-matches-only" valueRef="retention_index_matches_only"/>
+            <arg option="-retention-index-tolerance" valueRef="retention_index_tolerance"/>
         </execution>
     </tool>
 

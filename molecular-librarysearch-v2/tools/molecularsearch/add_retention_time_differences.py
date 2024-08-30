@@ -88,7 +88,7 @@ def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Di
 
 def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str],
                                    output_file: str, tolerance: float = 0.5, retention_time_matches_only: bool = False,
-                                   alkanes_file: str = None, retention_index_type: str = 'StdNP',
+                                   alkanes_file: str = None, retention_index_type: str = 'SemiStdNP',
                                    retention_index_matches_only: bool = False, retention_index_tolerance: float = 50):
     property_mapping = {
         'IONMODE': 'IonMode',

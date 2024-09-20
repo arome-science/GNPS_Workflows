@@ -38,3 +38,4 @@ minify_html
 xlrd
 openpyxl
 plotly
+ms_entropy

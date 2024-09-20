@@ -238,6 +238,7 @@
             <arg option="-output" valueRef="html_viewer"/>
             <arg option="-mz-tolerance-ppm" valueRef="mz_tolerance_ppm"/>
             <arg option="-retention-time-tolerance" valueRef="retention_time_tolerance"/>
+            <arg option="-order-by" valueRef="order_by"/>
         </execution>
     </tool>
 
@@ -265,6 +266,7 @@
             <arg option="-retention-time-matches-only" valueRef="retention_time_matches_only"/>
             <arg option="-retention-index-matches-only" valueRef="retention_index_matches_only"/>
             <arg option="-retention-index-tolerance" valueRef="retention_index_tolerance"/>
+            <arg option="-min-entropy" valueRef="min_entropy"/>
         </execution>
     </tool>
 
@@ -301,6 +303,7 @@
             <arg option="-annotations" valueRef="annotations"/>
             <arg option="-libraries" valueRef="libraries"/>
             <arg option="-retention-time-tolerance" valueRef="retention_time_tolerance"/>
+            <arg option="-order-by" valueRef="order_by"/>
             <arg option="-output" valueRef="annotations_in_gnps_format"/>
         </execution>
     </tool>

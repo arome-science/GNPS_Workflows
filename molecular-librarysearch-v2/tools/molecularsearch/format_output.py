@@ -8,9 +8,9 @@ from tqdm import tqdm
 from typing import List
 
 
-def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5) -> pd.DataFrame:
+def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5, order_by: str = 'Score') -> pd.DataFrame:
     common_columns = ['#Scan#', 'Charge', 'SpecMZ', 'SpectrumFile', 'p-value']
-    annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'RetIndex', 'MassDiff', 'RTdiff', 'RTmatch', 'Protein',
+    annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'Clean Entropy', 'RetIndex', 'MassDiff', 'RTdiff', 'RTmatch', 'Protein',
                           'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey',
                           'RetIndexDiff']
 
@@ -22,7 +22,7 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5)
             library_group = annotation_group[annotation_group['LibraryName'] == library] if isinstance(library, str) else annotation_group
             library_group['in_ret_time_tolerance'] = library_group['RTdiff'].apply(lambda x: x < retention_time_tolerance) \
                 if 'RTdiff' in library_group.columns and library.startswith('LEVEL1') else None
-            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', 'Score'], ascending=False)
+            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', order_by], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
                 row[f'{library}: {column}'] = sorted_group.iloc[0].get(column)
@@ -58,7 +58,7 @@ def merge_columns(data: pd.DataFrame) -> pd.Series:
 
 
 def format_output(annotations_filename: str, library_filenames: List[str], output_filename: str,
-                  retention_time_tolerance: float = 0.5):
+                  retention_time_tolerance: float = 0.5, order_by: str = 'Score'):
     annotations = pd.read_csv(annotations_filename, header=0, sep='\t')
     annotations.rename(mapper={
         'LibrarySpectrumID': 'Id',
@@ -66,15 +66,17 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         'ParentMassDiff': 'MassDiff',
         'LibSearchSharedPeaks': 'SharedPeaks',
         'MQScore': 'Score',
+        'CleanEntropy': 'Clean Entropy',
         'ExactMass': 'Mass'
     }, axis=1, inplace=True)
 
     # for library_filename in library_filenames:
     #     add_library_info(annotations, library_filename)
 
-    annotations = filter_by_library(annotations, retention_time_tolerance)
+    annotations = filter_by_library(annotations, retention_time_tolerance, order_by)
 
     annotations['MQScore'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Score')]])
+    annotations['Entropy'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Clean Entropy')]])
     annotations['SpectrumID'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Id')]])
     annotations['Compound_Name'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Peptide')]])
     annotations['Adduct'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Prec.Type')]])
@@ -99,6 +101,14 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
     annotations.to_csv(output_filename, index=False, sep='\t')
 
 
+def map_order_by(order_by: str):
+    if order_by == 'MQScore':
+        return 'Score'
+    if order_by == 'CleanEntropy':
+        return 'Clean Entropy'
+    return order_by
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate annotations in the GNPS format')
     parser.add_argument('--annotations', help='TSV file with MSPepSearch annotations', required=True)
@@ -106,6 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='Output filename', required=True)
     parser.add_argument('--retention-time-tolerance', help='Retention time tolerance (min)', type=float,
                         default=0.5)
+    parser.add_argument('--order-by', help='Order by', default='MQScore')
     args = parser.parse_args()
     args.libraries = expand_directories(args.libraries)
-    format_output(args.annotations, args.libraries, args.output, args.retention_time_tolerance)
+    format_output(args.annotations, args.libraries, args.output, args.retention_time_tolerance,
+                  map_order_by(args.order_by))

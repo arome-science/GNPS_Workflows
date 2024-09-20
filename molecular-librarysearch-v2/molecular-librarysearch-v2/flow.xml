@@ -54,6 +54,7 @@
         <input port="alkanes" object="alkanes"/>
         <input port="retention_index_matches_only" object="@RETENTION_INDEX_MATCHES_ONLY"/>
         <input port="retention_index_tolerance" object="@RETENTION_INDEX_TOLERANCE"/>
+        <input port="min_entropy" object="@MIN_ENTROPY"/>
         <output port="annotations_with_rt" object="annotations_with_rt"/>
     </action>
 
@@ -104,6 +105,7 @@
         <input port="libraries" object="library"/>
         <input port="mz_tolerance_ppm" object="@MZ_TOLERANCE_PPM"/>
         <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>
+        <input port="order_by" object="@ORDER_BY"/>
         <output port="html_viewer" object="html_viewer"/>
     </action>
 
@@ -112,6 +114,7 @@
         <input port="annotations" object="annotations_with_fdr"/>
         <input port="libraries" object="library"/>
         <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>
+        <input port="order_by" object="@ORDER_BY"/>
         <output port="annotations_in_gnps_format" object="annotations_in_gnps_format"/>
     </action>
 

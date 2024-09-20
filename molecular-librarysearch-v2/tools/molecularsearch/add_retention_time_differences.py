@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+import ms_entropy
 
 from os import listdir
 from os.path import basename, isdir, isfile, join, splitext
@@ -88,8 +89,9 @@ def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Di
 
 def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str],
                                    output_file: str, tolerance: float = 0.5, retention_time_matches_only: bool = False,
-                                   alkanes_file: str = None, retention_index_type: str = 'StdNP',
-                                   retention_index_matches_only: bool = False, retention_index_tolerance: float = 50):
+                                   alkanes_file: str = None, retention_index_type: str = 'SemiStdNP',
+                                   retention_index_matches_only: bool = False, retention_index_tolerance: float = 50,
+                                   min_entropy: float = 0.0):
     property_mapping = {
         'IONMODE': 'IonMode',
         'ION_MODE': 'IonMode',
@@ -110,7 +112,7 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
 
     spectra = {}
     for spectrum_file in spectrum_files:
-        spectra.update(read_mgf(spectrum_file))
+        spectra.update(read_mgf(spectrum_file, id_field='SCANS'))
     # spectra_dict = {s.properties['name']: s for s in spectra}
 
     libraries = {}
@@ -129,7 +131,8 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
         # query_spectrum = spectra.get(query_id)
         query_spectrum = spectra[query_id] if query_id in spectra else None
         if query_spectrum is None:
-            continue
+            raise ValueError(f'Cannot find spectrum {query_id} in the query spectra')
+            # continue
 
         # query_ret_time = query_spectrum.properties.get('RTINSECONDS')
         # if query_ret_time is not None:
@@ -147,11 +150,28 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
         # library_spectrum = library.get(library_id)
         library_spectrum = library[library_id] if library_id in library else None
         if library_spectrum is None:
-            continue
+            raise ValueError(f'Cannot find spectrum {library_id} in the library {library_name}')
+            # continue
 
         # if query_spectrum.get_polarity_sign() != library_spectrum.get_polarity_sign():
         #     drop_indices.append(index)
         #     continue
+
+        query_spectrum_peaks = np.array(query_spectrum.peaks)
+        query_spectrum_peaks[:, 1] /= np.sum(query_spectrum_peaks[:, 1])
+        library_spectrum_peaks = np.array(library_spectrum.peaks)
+        library_spectrum_peaks[:, 1] /= np.sum(library_spectrum_peaks[:, 1])
+        entropy_similarity = ms_entropy.calculate_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks, clean_spectra=False)
+        unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks, clean_spectra=False)
+        clean_entropy_similarity = ms_entropy.calculate_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks)
+        clean_unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks)
+        annotations_with_rt.loc[index, 'Entropy'] = entropy_similarity
+        annotations_with_rt.loc[index, 'UnweightedEntropy'] = unweighted_entropy_similarity
+        annotations_with_rt.loc[index, 'CleanEntropy'] = clean_entropy_similarity
+        annotations_with_rt.loc[index, 'CleanUnweightedEntropy'] = clean_unweighted_entropy_similarity
+
+        if clean_entropy_similarity < min_entropy:
+            drop_indices.append(index)
 
         # library_ret_time = library_spectrum.properties.get('RTINSECONDS')
         # if library_ret_time is not None:
@@ -201,6 +221,7 @@ if __name__ == '__main__':
                         type=lambda x: x.lower() in ('1', 'yes', 'true'), default=False)
     parser.add_argument('--retention-index-tolerance', help='Retention index tolerance', type=float,
                         default=50)
+    parser.add_argument('--min-entropy', help='Minimum entropy similarity', type=float, default=0.0)
     args = parser.parse_args()
 
     if isdir(args.spectra):
@@ -219,4 +240,5 @@ if __name__ == '__main__':
     add_retention_time_differences(args.annotations, args.spectra, args.libraries, args.output, args.tolerance,
                                    args.retention_time_matches_only, args.alkanes,
                                    retention_index_matches_only=args.retention_index_matches_only,
-                                   retention_index_tolerance=args.retention_index_tolerance)
+                                   retention_index_tolerance=args.retention_index_tolerance,
+                                   min_entropy=args.min_entropy)

@@ -39,7 +39,8 @@ def calculate_retention_indices(annotations: pd.DataFrame, alkanes_filename: str
         if alkane >= len(alkanes) - 1:
             break
 
-        annotations.loc[i, 'RetIndex'] = 100 * (alkane_carbons[alkane] + (time - alkane_times[alkane]) / (alkane_times[alkane + 1] - alkane_times[alkane]))
+        annotations.loc[i, 'RetIndex'] = 100 * (alkane_carbons[alkane] + (time - alkane_times[alkane]) / (
+                    alkane_times[alkane + 1] - alkane_times[alkane]))
 
     return annotations
 
@@ -54,7 +55,6 @@ def parse_retention_index(text: str) -> Dict[str, float]:
 def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Dict[str, Spectrum]],
                               retention_index_type: str, matches_only: bool = False,
                               tolerance=50) -> pd.DataFrame:
-
     for (scan, retention_index, library_name), rows in annotations.groupby(by=['#Scan#', 'RetIndex', 'LibraryName']):
         library = libraries[library_name] if library_name in libraries else None
         if library is None:
@@ -66,14 +66,16 @@ def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Di
                 print(f'Cannot find spectrum {spectrumId} in the library {library_name}', file=sys.stderr)
                 continue
 
-            library_retention_index = spectrum.properties['Retention_index'] if 'Retention_index' in spectrum.properties else None
+            library_retention_index = spectrum.properties[
+                'Retention_index'] if 'Retention_index' in spectrum.properties else None
             if library_retention_index is None:
                 continue
 
             library_retention_index = parse_retention_index(library_retention_index)
             if retention_index_type in library_retention_index:
                 annotations.loc[index, 'MatchedRetIndex'] = str(library_retention_index)
-                annotations.loc[index, 'RetIndexDiff'] = abs(library_retention_index[retention_index_type] - retention_index)
+                annotations.loc[index, 'RetIndexDiff'] = abs(
+                    library_retention_index[retention_index_type] - retention_index)
 
     drop_indices = set()
     for _, rows in annotations.groupby(by=['#Scan#', 'LibraryName']):
@@ -161,10 +163,14 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
         query_spectrum_peaks[:, 1] /= np.sum(query_spectrum_peaks[:, 1])
         library_spectrum_peaks = np.array(library_spectrum.peaks)
         library_spectrum_peaks[:, 1] /= np.sum(library_spectrum_peaks[:, 1])
-        entropy_similarity = ms_entropy.calculate_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks, clean_spectra=False)
-        unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks, clean_spectra=False)
+        entropy_similarity = ms_entropy.calculate_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks,
+                                                                     clean_spectra=False)
+        unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks,
+                                                                                           library_spectrum_peaks,
+                                                                                           clean_spectra=False)
         clean_entropy_similarity = ms_entropy.calculate_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks)
-        clean_unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks, library_spectrum_peaks)
+        clean_unweighted_entropy_similarity = ms_entropy.calculate_unweighted_entropy_similarity(query_spectrum_peaks,
+                                                                                                 library_spectrum_peaks)
         annotations_with_rt.loc[index, 'Entropy'] = entropy_similarity
         annotations_with_rt.loc[index, 'UnweightedEntropy'] = unweighted_entropy_similarity
         annotations_with_rt.loc[index, 'CleanEntropy'] = clean_entropy_similarity
@@ -221,6 +227,7 @@ if __name__ == '__main__':
                         type=lambda x: x.lower() in ('1', 'yes', 'true'), default=False)
     parser.add_argument('--retention-index-tolerance', help='Retention index tolerance', type=float,
                         default=50)
+    parser.add_argument('--retention-index-type', help='Retention index type', default='SemiStdNP')
     parser.add_argument('--min-entropy', help='Minimum entropy similarity', type=float, default=0.0)
     args = parser.parse_args()
 
@@ -241,4 +248,5 @@ if __name__ == '__main__':
                                    args.retention_time_matches_only, args.alkanes,
                                    retention_index_matches_only=args.retention_index_matches_only,
                                    retention_index_tolerance=args.retention_index_tolerance,
+                                   retention_index_type=args.retention_index_type,
                                    min_entropy=args.min_entropy)

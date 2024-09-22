@@ -54,6 +54,7 @@
         <input port="alkanes" object="alkanes"/>
         <input port="retention_index_matches_only" object="@RETENTION_INDEX_MATCHES_ONLY"/>
         <input port="retention_index_tolerance" object="@RETENTION_INDEX_TOLERANCE"/>
+        <input port="retention_index_type" object="@RETENTION_INDEX_TYPE"/>
         <input port="min_entropy" object="@MIN_ENTROPY"/>
         <output port="annotations_with_rt" object="annotations_with_rt"/>
     </action>

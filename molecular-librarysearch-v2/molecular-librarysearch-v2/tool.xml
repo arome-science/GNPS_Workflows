@@ -266,6 +266,7 @@
             <arg option="-retention-time-matches-only" valueRef="retention_time_matches_only"/>
             <arg option="-retention-index-matches-only" valueRef="retention_index_matches_only"/>
             <arg option="-retention-index-tolerance" valueRef="retention_index_tolerance"/>
+            <arg option="-retention-index-type" valueRef="retention_index_type"/>
             <arg option="-min-entropy" valueRef="min_entropy"/>
         </execution>
     </tool>

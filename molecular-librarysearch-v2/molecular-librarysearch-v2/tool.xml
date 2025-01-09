@@ -226,6 +226,7 @@
     <tool name="write_html">
         <require name="annotations" type="file"/>
         <require name="spectra" type="file"/>
+        <require name="quantification_table" type="file"/>
         <require name="libraries" type="folder"/>
         <produce name="html_viewer" type="file" naming="explicit" extension="html"/>
 
@@ -233,6 +234,7 @@
             <arg pathRef="write_html.script"/>
             <arg option="-annotations" valueRef="annotations"/>
             <arg option="-spectra" valueRef="spectra"/>
+            <arg option="-quantitation" valueRef="quantification_table"/>
             <arg option="-libraries" valueRef="libraries"/>
             <arg option="-source" value="gnps"/>
             <arg option="-output" valueRef="html_viewer"/>

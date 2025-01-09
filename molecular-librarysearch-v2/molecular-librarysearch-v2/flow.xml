@@ -103,6 +103,7 @@
     <action name="write_html">
         <input port="annotations" object="annotations_with_fdr"/>
         <input port="spectra" object="spectra"/>
+        <input port="quantification_table" object="quantification_table"/>
         <input port="libraries" object="library"/>
         <input port="mz_tolerance_ppm" object="@MZ_TOLERANCE_PPM"/>
         <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>

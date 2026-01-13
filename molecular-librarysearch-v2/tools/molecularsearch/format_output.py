@@ -12,7 +12,7 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5,
     common_columns = ['#Scan#', 'Charge', 'SpecMZ', 'SpectrumFile', 'p-value']
     annotation_columns = ['Peptide', 'Mass', 'SharedPeaks', 'Id', 'Score', 'Clean Entropy', 'RetIndex', 'MassDiff', 'RTdiff', 'RTmatch', 'Protein',
                           'mzErrorPPM', 'FalseDiscoveryRate', 'IonMode', 'Instrument', 'Prec.Type', 'InChIKey',
-                          'RetIndexDiff']
+                          'RetIndexDiff', 'PUBCHEM_ID', 'CASNO', 'HMDB_ID', 'FORMULA']
 
     filtered_rows = []
     for index, annotation_group in tqdm(data.groupby(by=['#Scan#']), total=len(data['#Scan#'].unique())):
@@ -67,7 +67,9 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
         'LibSearchSharedPeaks': 'SharedPeaks',
         'MQScore': 'Score',
         'CleanEntropy': 'Clean Entropy',
-        'ExactMass': 'Mass'
+        # 'ExactMass': 'Mass',
+        'Adduct': 'Prec.Type',
+        'SMILES': 'Smiles'
     }, axis=1, inplace=True)
 
     # for library_filename in library_filenames:
@@ -85,8 +87,8 @@ def format_output(annotations_filename: str, library_filenames: List[str], outpu
     annotations['RTdiff'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': RTdiff')]])
     annotations['RetIndex'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': RetIndex')]])
     annotations['RetIndexDiff'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': RetIndexDiff')]])
+    annotations['Smiles'] = merge_columns(annotations[[c for c in annotations.columns if c.endswith(': Smiles')]])
 
-    annotations['Smiles'] = None
     annotations['Ion_Source'] = None
     annotations['Instrument'] = None
     annotations['Compound_Source'] = None

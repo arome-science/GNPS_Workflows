@@ -89,6 +89,20 @@ def filter_by_retention_index(annotations: pd.DataFrame, libraries: Dict[str, Di
     return annotations
 
 
+def get_charge(charge: str) -> int:
+    for pattern in [r'^(\d)\+$', r'^\+(\d)$', r'^(\d)$']:
+        match = re.match(pattern, charge)
+        if match is not None:
+            return int(match.group(1))
+
+    for pattern in [r'^(\d)\-$', r'^\-(\d)$']:
+        match = re.match(pattern, charge)
+        if match is not None:
+            return -int(match.group(1))
+
+    return 0
+
+
 def add_retention_time_differences(annotation_file: str, spectrum_files: list, library_files: List[str],
                                    output_file: str, tolerance: float = 0.5, retention_time_matches_only: bool = False,
                                    alkanes_file: str = None, retention_index_type: str = 'SemiStdNP',
@@ -155,6 +169,13 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
             raise ValueError(f'Cannot find spectrum {library_id} in the library {library_name}')
             # continue
 
+        if 'CHARGE' in query_spectrum.properties and 'CHARGE' in library_spectrum.properties:
+            query_charge = query_spectrum.properties['CHARGE']
+            library_charge = library_spectrum.properties['CHARGE']
+            matched_polarity = get_charge(query_charge) * get_charge(library_charge) >= 0
+            if not matched_polarity:
+                drop_indices.append(index)
+
         # if query_spectrum.get_polarity_sign() != library_spectrum.get_polarity_sign():
         #     drop_indices.append(index)
         #     continue
@@ -175,6 +196,14 @@ def add_retention_time_differences(annotation_file: str, spectrum_files: list, l
         annotations_with_rt.loc[index, 'UnweightedEntropy'] = unweighted_entropy_similarity
         annotations_with_rt.loc[index, 'CleanEntropy'] = clean_entropy_similarity
         annotations_with_rt.loc[index, 'CleanUnweightedEntropy'] = clean_unweighted_entropy_similarity
+
+        annotations_with_rt.loc[index, 'Adduct'] = library_spectrum.properties.get('ADDUCT')
+        annotations_with_rt.loc[index, 'PUBCHEM_ID'] = library_spectrum.properties.get('PUBCHEM_ID')
+        annotations_with_rt.loc[index, 'CASNO'] = library_spectrum.properties.get('CASNO')
+        annotations_with_rt.loc[index, 'HMDB_ID'] = library_spectrum.properties.get('HMDB_ID')
+        annotations_with_rt.loc[index, 'InChIKey'] = library_spectrum.properties.get('InChIKey')
+        annotations_with_rt.loc[index, 'SMILES'] = library_spectrum.properties.get('SMILES')
+        annotations_with_rt.loc[index, 'FORMULA'] = library_spectrum.properties.get('FORMULA')
 
         if clean_entropy_similarity < min_entropy:
             drop_indices.append(index)

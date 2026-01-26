@@ -25,7 +25,11 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5,
             sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', order_by], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
-                row[f'{library}: {column}'] = sorted_group.iloc[0].get(column)
+                value = sorted_group.iloc[0].get(column)
+                if isinstance(value, pd.Series):
+                    value = value.dropna()
+                    value = value.iloc[0] if len(value) > 0 else None
+                row[f'{library}: {column}'] = value
         filtered_rows.append(row)
 
     # filtered_data = pd.concat(filtered_rows, ignore_index=True)

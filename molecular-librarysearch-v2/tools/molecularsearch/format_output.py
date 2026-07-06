@@ -24,10 +24,17 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5,
                 if 'RTdiff' in library_group.columns and library.startswith('LEVEL1') else None
             if order_by == 'RT':
                 library_group['_order_col'] = -library_group['RTdiff'] if 'RTdiff' in library_group.columns else 0
-                sort_col = '_order_col'
+                sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', '_order_col'], ascending=False)
+            elif order_by == 'RT+Score':
+                max_score = library_group['MQScore'].max()
+                contending = library_group[library_group['MQScore'] >= max_score - 0.1]
+                rest = library_group[library_group['MQScore'] < max_score - 0.1]
+                if 'RTdiff' in library_group.columns:
+                    contending = contending.sort_values(by='RTdiff', ascending=True)
+                rest = rest.sort_values(by='MQScore', ascending=False)
+                sorted_group = pd.concat([contending, rest])
             else:
-                sort_col = order_by
-            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', sort_col], ascending=False)
+                sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', order_by], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
                 value = sorted_group.iloc[0].get(column)

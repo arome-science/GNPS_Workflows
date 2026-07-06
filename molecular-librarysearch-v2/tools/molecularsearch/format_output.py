@@ -22,7 +22,12 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5,
             library_group = annotation_group[annotation_group['LibraryName'] == library] if isinstance(library, str) else annotation_group
             library_group['in_ret_time_tolerance'] = library_group['RTdiff'].apply(lambda x: x < retention_time_tolerance) \
                 if 'RTdiff' in library_group.columns and library.startswith('LEVEL1') else None
-            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', order_by], ascending=False)
+            if order_by == 'RT':
+                library_group['_order_col'] = -library_group['RTdiff'] if 'RTdiff' in library_group.columns else 0
+                sort_col = '_order_col'
+            else:
+                sort_col = order_by
+            sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', sort_col], ascending=False)
             for column in annotation_columns:
                 # library_name = rename_nist_library(library)
                 value = sorted_group.iloc[0].get(column)

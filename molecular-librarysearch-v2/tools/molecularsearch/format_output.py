@@ -26,12 +26,13 @@ def filter_by_library(data: pd.DataFrame, retention_time_tolerance: float = 0.5,
                 library_group['_order_col'] = -library_group['RTdiff'] if 'RTdiff' in library_group.columns else 0
                 sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', '_order_col'], ascending=False)
             elif order_by == 'RT+Score':
-                max_score = library_group['MQScore'].max()
-                contending = library_group[library_group['MQScore'] >= max_score - 0.1]
-                rest = library_group[library_group['MQScore'] < max_score - 0.1]
+                score_col = 'MQScore' if 'MQScore' in library_group.columns else 'Score'
+                max_score = library_group[score_col].max()
+                contending = library_group[library_group[score_col] >= max_score - 0.1]
+                rest = library_group[library_group[score_col] < max_score - 0.1]
                 if 'RTdiff' in library_group.columns:
                     contending = contending.sort_values(by='RTdiff', ascending=True)
-                rest = rest.sort_values(by='MQScore', ascending=False)
+                rest = rest.sort_values(by=score_col, ascending=False)
                 sorted_group = pd.concat([contending, rest])
             else:
                 sorted_group = library_group.sort_values(by=['in_ret_time_tolerance', order_by], ascending=False)

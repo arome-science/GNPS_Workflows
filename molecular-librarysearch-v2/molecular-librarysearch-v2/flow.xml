@@ -108,6 +108,7 @@
         <input port="mz_tolerance_ppm" object="@MZ_TOLERANCE_PPM"/>
         <input port="retention_time_tolerance" object="@RETENTION_TIME_TOLERANCE"/>
         <input port="order_by" object="@ORDER_BY"/>
+        <input port="num_matches" object="@NUM_MATCHES"/>
         <output port="html_viewer" object="html_viewer"/>
     </action>
 

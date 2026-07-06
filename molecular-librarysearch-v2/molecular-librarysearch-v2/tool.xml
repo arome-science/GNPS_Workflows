@@ -241,6 +241,7 @@
             <arg option="-mz-tolerance-ppm" valueRef="mz_tolerance_ppm"/>
             <arg option="-retention-time-tolerance" valueRef="retention_time_tolerance"/>
             <arg option="-order-by" valueRef="order_by"/>
+            <arg option="-num-matches" valueRef="num_matches"/>
         </execution>
     </tool>
 
